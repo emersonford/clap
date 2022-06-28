@@ -274,6 +274,51 @@ impl<'help> App<'help> {
         self
     }
 
+    /// Allows one to mutate a [`Command`] after it's been added as a subcommand.
+    ///
+    /// This can be useful for modifying auto-generated arguments of nested subcommands with
+    /// [`Command::mut_arg`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use clap::Command;
+    ///
+    /// let mut cmd = Command::new("foo")
+    ///         .subcommand(Command::new("bar"))
+    ///         .mut_subcommand("bar", |subcmd| subcmd.disable_help_flag(true));
+    ///
+    /// let res = cmd.try_get_matches_from_mut(vec!["foo", "bar", "--help"]);
+    ///
+    /// // Since we disabled the help flag on the "bar" subcommand, this should err.
+    ///
+    /// assert!(res.is_err());
+    ///
+    /// let res = cmd.try_get_matches_from_mut(vec!["foo", "bar"]);
+    /// assert!(res.is_ok());
+    /// ```
+    #[must_use]
+    pub fn mut_subcommand<T, F>(mut self, name: T, f: F) -> Self
+    where
+        F: FnOnce(App<'help>) -> App<'help>,
+        T: Into<&'help str>,
+    {
+        let subcmd_name: &str = name.into();
+        let pos = self
+            .subcommands
+            .iter()
+            .position(|s| s.aliases_to(subcmd_name));
+
+        let subcmd = if let Some(idx) = pos {
+            self.subcommands.remove(idx)
+        } else {
+            App::new(subcmd_name)
+        };
+
+        self.subcommands.push(f(subcmd));
+        self
+    }
+
     /// Adds an [`ArgGroup`] to the application.
     ///
     /// [`ArgGroup`]s are a family of related arguments.
