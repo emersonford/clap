@@ -79,6 +79,110 @@ fn default_value() {
 }
 
 #[test]
+fn vec_for_default_value_t() {
+    #[derive(clap::ValueEnum, PartialEq, Debug, Clone)]
+    enum ArgChoice {
+        Foo,
+        Bar,
+    }
+
+    #[derive(Parser, PartialEq, Debug)]
+    struct Opt {
+        #[clap(value_enum, value_parser, default_value_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
+        arg: Vec<ArgChoice>,
+
+        #[clap(
+            long,
+            value_enum,
+            value_parser,
+            default_value_t = clap::ValueEnum::value_variants().to_vec()
+        )]
+        arg2: Vec<ArgChoice>,
+    }
+
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&["", "foo"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&["", "bar"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo, ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&[""]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo, ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo]
+        },
+        Opt::try_parse_from(&["", "--arg2", "foo"]).unwrap()
+    );
+}
+
+#[test]
+fn vec_for_default_value_os_t() {
+    #[derive(clap::ValueEnum, PartialEq, Debug, Clone)]
+    enum ArgChoice {
+        Foo,
+        Bar,
+    }
+
+    #[derive(Parser, PartialEq, Debug)]
+    struct Opt {
+        #[clap(value_enum, value_parser, default_value_os_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
+        arg: Vec<ArgChoice>,
+
+        #[clap(
+            long,
+            value_enum,
+            value_parser,
+            default_value_os_t = clap::ValueEnum::value_variants().to_vec()
+        )]
+        arg2: Vec<ArgChoice>,
+    }
+
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&["", "foo"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&["", "bar"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo, ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo, ArgChoice::Bar]
+        },
+        Opt::try_parse_from(&[""]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![ArgChoice::Foo, ArgChoice::Bar],
+            arg2: vec![ArgChoice::Foo]
+        },
+        Opt::try_parse_from(&["", "--arg2", "foo"]).unwrap()
+    );
+}
+
+#[test]
 fn multi_word_is_renamed_kebab() {
     #[derive(clap::ValueEnum, PartialEq, Debug, Clone)]
     #[allow(non_camel_case_types)]

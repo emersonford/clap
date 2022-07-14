@@ -495,13 +495,34 @@ impl Attrs {
                         quote!(<#ty as ::std::default::Default>::default())
                     };
 
+                    let mut multi_value = false;
+
                     let val = if parsed.iter().any(|a| matches!(a, ValueEnum(_))) {
-                        quote_spanned!(ident.span()=> {
-                            {
-                                let val: #ty = #val;
-                                clap::ValueEnum::to_possible_value(&val).unwrap().get_name()
+                        let container_type = Ty::from_syn_ty(ty);
+
+                        match *container_type {
+                            Ty::Vec => {
+                                multi_value = true;
+
+                                quote_spanned!(ident.span()=> {
+                                    {
+                                        static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
+                                            let vals: #ty = #val;
+                                            vals.iter().map(|val| clap::ValueEnum::to_possible_value(val).unwrap().get_name()).collect()
+                                        });
+                                        &*DEFAULT_VALUE.as_slice()
+                                    }
+                                })
                             }
-                        })
+                            _ => {
+                                quote_spanned!(ident.span()=> {
+                                    {
+                                        let val: #ty = #val;
+                                        clap::ValueEnum::to_possible_value(&val).unwrap().get_name()
+                                    }
+                                })
+                            }
+                        }
                     } else {
                         quote_spanned!(ident.span()=> {
                             static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<String> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
@@ -512,8 +533,13 @@ impl Attrs {
                         })
                     };
 
-                    let raw_ident = Ident::new("default_value", ident.span());
-                    self.methods.push(Method::new(raw_ident, val));
+                    if multi_value {
+                        let raw_ident = Ident::new("default_values", ident.span());
+                        self.methods.push(Method::new(raw_ident, val));
+                    } else {
+                        let raw_ident = Ident::new("default_value", ident.span());
+                        self.methods.push(Method::new(raw_ident, val));
+                    }
                 }
 
                 DefaultValueOsT(ident, expr) => {
@@ -535,13 +561,34 @@ impl Attrs {
                         quote!(<#ty as ::std::default::Default>::default())
                     };
 
+                    let mut multi_value = false;
+
                     let val = if parsed.iter().any(|a| matches!(a, ValueEnum(_))) {
-                        quote_spanned!(ident.span()=> {
-                            {
-                                let val: #ty = #val;
-                                clap::ValueEnum::to_possible_value(&val).unwrap().get_name()
+                        let container_type = Ty::from_syn_ty(ty);
+
+                        match *container_type {
+                            Ty::Vec => {
+                                multi_value = true;
+
+                                quote_spanned!(ident.span()=> {
+                                    {
+                                        static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<Vec<&::std::ffi::OsStr>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
+                                            let vals: #ty = #val;
+                                            vals.iter().map(|val| clap::ValueEnum::to_possible_value(val).unwrap().get_name()).map(::std::ffi::OsStr::new).collect()
+                                        });
+                                        &*DEFAULT_VALUE.as_slice()
+                                    }
+                                })
                             }
-                        })
+                            _ => {
+                                quote_spanned!(ident.span()=> {
+                                    {
+                                        let val: #ty = #val;
+                                        clap::ValueEnum::to_possible_value(&val).unwrap().get_name()
+                                    }
+                                })
+                            }
+                        }
                     } else {
                         quote_spanned!(ident.span()=> {
                             static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<::std::ffi::OsString> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
@@ -552,8 +599,13 @@ impl Attrs {
                         })
                     };
 
-                    let raw_ident = Ident::new("default_value_os", ident.span());
-                    self.methods.push(Method::new(raw_ident, val));
+                    if multi_value {
+                        let raw_ident = Ident::new("default_values_os", ident.span());
+                        self.methods.push(Method::new(raw_ident, val));
+                    } else {
+                        let raw_ident = Ident::new("default_value_os", ident.span());
+                        self.methods.push(Method::new(raw_ident, val));
+                    }
                 }
 
                 NextDisplayOrder(ident, expr) => {
