@@ -45,6 +45,77 @@ fn auto_default_value_t() {
 }
 
 #[test]
+fn default_value_t_vec() {
+    #[derive(Parser, PartialEq, Debug)]
+    struct Opt {
+        #[clap(value_parser, default_value_t = vec![1, 2, 3])]
+        arg: Vec<i32>,
+    }
+    assert_eq!(
+        Opt { arg: vec![1, 2, 3] },
+        Opt::try_parse_from(&["test"]).unwrap()
+    );
+    assert_eq!(
+        Opt { arg: vec![1] },
+        Opt::try_parse_from(&["test", "1"]).unwrap()
+    );
+
+    let help = utils::get_long_help::<Opt>();
+    assert!(help.contains("[default: 1 2 3]"));
+}
+
+#[test]
+fn default_value_os_t() {
+    #[derive(Parser, PartialEq, Debug)]
+    struct Opt {
+        #[clap(value_parser, default_value_os_t = PathBuf::from("abc.def"))]
+        arg: PathBuf,
+    }
+    assert_eq!(
+        Opt {
+            arg: PathBuf::from("abc.def")
+        },
+        Opt::try_parse_from(&["test"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: PathBuf::from("ghi")
+        },
+        Opt::try_parse_from(&["test", "ghi"]).unwrap()
+    );
+
+    let help = utils::get_long_help::<Opt>();
+    assert!(help.contains("[default: abc.def]"));
+}
+
+#[test]
+fn default_value_os_t_vec() {
+    #[derive(Parser, PartialEq, Debug)]
+    struct Opt {
+        #[clap(
+            value_parser,
+            default_value_os_t = vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
+        )]
+        arg: Vec<PathBuf>,
+    }
+    assert_eq!(
+        Opt {
+            arg: vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
+        },
+        Opt::try_parse_from(&["test"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg: vec![PathBuf::from("ghi")]
+        },
+        Opt::try_parse_from(&["test", "ghi"]).unwrap()
+    );
+
+    let help = utils::get_long_help::<Opt>();
+    assert!(help.contains("[default: abc.def 123.foo]"));
+}
+
+#[test]
 fn detect_os_variant() {
     #![allow(unused_parens)] // needed for `as_ref` call
 
