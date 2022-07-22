@@ -498,8 +498,8 @@ impl Attrs {
                     let container_type = Ty::from_syn_ty(ty);
                     let multi_value = *container_type == Ty::Vec;
 
-                    let val = if parsed.iter().any(|a| matches!(a, ValueEnum(_))) {
-                        if multi_value {
+                    if multi_value {
+                        let val = if parsed.iter().any(|a| matches!(a, ValueEnum(_))) {
                             quote_spanned!(ident.span()=> {
                                 {
                                     static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
@@ -512,42 +512,42 @@ impl Attrs {
                         } else {
                             quote_spanned!(ident.span()=> {
                                 {
+                                    static DEFAULT_STRINGS: clap::__macro_refs::once_cell::sync::Lazy<Vec<::std::string::String>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
+                                        let vals: #ty = #val;
+                                        vals.iter().map(::std::string::ToString::to_string).collect()
+                                    });
+
+                                    static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
+                                        DEFAULT_STRINGS.iter().map(::std::string::String::as_str).collect()
+                                    });
+                                    &*DEFAULT_VALUE.as_slice()
+                                }
+                            })
+                        };
+
+                        self.methods
+                            .push(Method::new(Ident::new("default_values", ident.span()), val));
+                    } else {
+                        let val = if parsed.iter().any(|a| matches!(a, ValueEnum(_))) {
+                            quote_spanned!(ident.span()=> {
+                                {
                                     let val: #ty = #val;
                                     clap::ValueEnum::to_possible_value(&val).unwrap().get_name()
                                 }
                             })
-                        }
-                    } else if multi_value {
-                        quote_spanned!(ident.span()=> {
-                            {
-                                static DEFAULT_STRINGS: clap::__macro_refs::once_cell::sync::Lazy<Vec<::std::string::String>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
-                                    let vals: #ty = #val;
-                                    vals.iter().map(::std::string::ToString::to_string).collect()
+                        } else {
+                            quote_spanned!(ident.span()=> {
+                                static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<String> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
+                                    let val: #ty = #val;
+                                    ::std::string::ToString::to_string(&val)
                                 });
+                                &*DEFAULT_VALUE
+                            })
+                        };
 
-                                static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
-                                    DEFAULT_STRINGS.iter().map(::std::string::String::as_str).collect()
-                                });
-                                &*DEFAULT_VALUE.as_slice()
-                            }
-                        })
-                    } else {
-                        quote_spanned!(ident.span()=> {
-                            static DEFAULT_VALUE: clap::__macro_refs::once_cell::sync::Lazy<String> = clap::__macro_refs::once_cell::sync::Lazy::new(|| {
-                                let val: #ty = #val;
-                                ::std::string::ToString::to_string(&val)
-                            });
-                            &*DEFAULT_VALUE
-                        })
-                    };
-
-                    let raw_ident = if multi_value {
-                        Ident::new("default_values", ident.span())
-                    } else {
-                        Ident::new("default_value", ident.span())
-                    };
-
-                    self.methods.push(Method::new(raw_ident, val));
+                        self.methods
+                            .push(Method::new(Ident::new("default_value", ident.span()), val));
+                    }
                 }
 
                 DefaultValueOsT(ident, expr) => {
