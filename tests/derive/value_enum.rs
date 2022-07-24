@@ -88,13 +88,12 @@ fn vec_for_default_values_t() {
 
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
-        #[clap(value_enum, value_parser, default_values_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
+        #[clap(value_enum, default_values_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
         arg1: Vec<ArgChoice>,
 
         #[clap(
             long,
             value_enum,
-            value_parser,
             default_values_t = clap::ValueEnum::value_variants()
         )]
         arg2: Vec<ArgChoice>,
@@ -140,13 +139,12 @@ fn vec_for_default_values_os_t() {
 
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
-        #[clap(value_enum, value_parser, default_values_os_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
+        #[clap(value_enum, default_values_os_t = vec![ArgChoice::Foo, ArgChoice::Bar])]
         arg: Vec<ArgChoice>,
 
         #[clap(
             long,
             value_enum,
-            value_parser,
             default_values_os_t = clap::ValueEnum::value_variants()
         )]
         arg2: Vec<ArgChoice>,

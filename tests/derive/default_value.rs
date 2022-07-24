@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{CommandFactory, Parser};
 
 use crate::utils;
@@ -48,22 +50,22 @@ fn auto_default_value_t() {
 fn default_values_t() {
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
-        #[clap(value_parser, default_values_t = vec![1, 2, 3])]
+        #[clap(default_values_t = vec![1, 2, 3])]
         arg1: Vec<i32>,
 
-        #[clap(long, value_parser, default_values_t = &[4, 5, 6])]
+        #[clap(long, default_values_t = &[4, 5, 6])]
         arg2: Vec<i32>,
 
-        #[clap(long, value_parser, default_values_t = [7, 8, 9])]
+        #[clap(long, default_values_t = [7, 8, 9])]
         arg3: Vec<i32>,
 
-        #[clap(long, value_parser, default_values_t = 10..=12)]
+        #[clap(long, default_values_t = 10..=12)]
         arg4: Vec<i32>,
 
-        #[clap(long, value_parser, default_values_t = vec!["hello".to_string(), "world".to_string()])]
+        #[clap(long, default_values_t = vec!["hello".to_string(), "world".to_string()])]
         arg5: Vec<String>,
 
-        #[clap(long, value_parser, default_values_t = &vec!["foo".to_string(), "bar".to_string()])]
+        #[clap(long, default_values_t = &vec!["foo".to_string(), "bar".to_string()])]
         arg6: Vec<String>,
     }
     assert_eq!(
@@ -108,7 +110,7 @@ fn default_values_t() {
 fn default_value_os_t() {
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
-        #[clap(value_parser, default_value_os_t = PathBuf::from("abc.def"))]
+        #[clap(default_value_os_t = PathBuf::from("abc.def"))]
         arg: PathBuf,
     }
     assert_eq!(
@@ -133,14 +135,12 @@ fn default_values_os_t() {
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
         #[clap(
-            value_parser,
             default_values_os_t = vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
         )]
         arg1: Vec<PathBuf>,
 
         #[clap(
             long,
-            value_parser,
             default_values_os_t = &[PathBuf::from("bar.baz")]
         )]
         arg2: Vec<PathBuf>,
