@@ -1,0 +1,7 @@
+error: #[clap(default_values_t)] can be used only on Vec types
+ --> $DIR/default_values_t_invalid.rs:6:26
+  |
+6 |     #[clap(value_parser, default_values_t = [1, 2, 3])]
+  |                          ^^^^^^^^^^^^^^^^
+  |
+  = note: see https://github.com/clap-rs/clap/blob/master/examples/derive_ref/README.md#magic-attributes

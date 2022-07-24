@@ -45,19 +45,59 @@ fn auto_default_value_t() {
 }
 
 #[test]
-fn default_value_t_vec() {
+fn default_values_t() {
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
-        #[clap(value_parser, default_value_t = vec![1, 2, 3])]
-        arg: Vec<i32>,
+        #[clap(value_parser, default_values_t = vec![1, 2, 3])]
+        arg1: Vec<i32>,
+
+        #[clap(long, value_parser, default_values_t = &[4, 5, 6])]
+        arg2: Vec<i32>,
+
+        #[clap(long, value_parser, default_values_t = [7, 8, 9])]
+        arg3: Vec<i32>,
+
+        #[clap(long, value_parser, default_values_t = 10..=12)]
+        arg4: Vec<i32>,
+
+        #[clap(long, value_parser, default_values_t = vec!["hello".to_string(), "world".to_string()])]
+        arg5: Vec<String>,
+
+        #[clap(long, value_parser, default_values_t = &vec!["foo".to_string(), "bar".to_string()])]
+        arg6: Vec<String>,
     }
     assert_eq!(
-        Opt { arg: vec![1, 2, 3] },
+        Opt {
+            arg1: vec![1, 2, 3],
+            arg2: vec![4, 5, 6],
+            arg3: vec![7, 8, 9],
+            arg4: vec![10, 11, 12],
+            arg5: vec!["hello".to_string(), "world".to_string()],
+            arg6: vec!["foo".to_string(), "bar".to_string()],
+        },
         Opt::try_parse_from(&["test"]).unwrap()
     );
     assert_eq!(
-        Opt { arg: vec![1] },
+        Opt {
+            arg1: vec![1],
+            arg2: vec![4, 5, 6],
+            arg3: vec![7, 8, 9],
+            arg4: vec![10, 11, 12],
+            arg5: vec!["hello".to_string(), "world".to_string()],
+            arg6: vec!["foo".to_string(), "bar".to_string()],
+        },
         Opt::try_parse_from(&["test", "1"]).unwrap()
+    );
+    assert_eq!(
+        Opt {
+            arg1: vec![1, 2, 3],
+            arg2: vec![4, 5, 6],
+            arg3: vec![7, 8, 9],
+            arg4: vec![42, 15],
+            arg5: vec!["baz".to_string()],
+            arg6: vec!["foo".to_string(), "bar".to_string()],
+        },
+        Opt::try_parse_from(&["test", "--arg4", "42", "--arg4", "15", "--arg5", "baz"]).unwrap()
     );
 
     let help = utils::get_long_help::<Opt>();
@@ -89,26 +129,35 @@ fn default_value_os_t() {
 }
 
 #[test]
-fn default_value_os_t_vec() {
+fn default_values_os_t() {
     #[derive(Parser, PartialEq, Debug)]
     struct Opt {
         #[clap(
             value_parser,
-            default_value_os_t = vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
+            default_values_os_t = vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
         )]
-        arg: Vec<PathBuf>,
+        arg1: Vec<PathBuf>,
+
+        #[clap(
+            long,
+            value_parser,
+            default_values_os_t = &[PathBuf::from("bar.baz")]
+        )]
+        arg2: Vec<PathBuf>,
     }
     assert_eq!(
         Opt {
-            arg: vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")]
+            arg1: vec![PathBuf::from("abc.def"), PathBuf::from("123.foo")],
+            arg2: vec![PathBuf::from("bar.baz")]
         },
         Opt::try_parse_from(&["test"]).unwrap()
     );
     assert_eq!(
         Opt {
-            arg: vec![PathBuf::from("ghi")]
+            arg1: vec![PathBuf::from("ghi")],
+            arg2: vec![PathBuf::from("baz.bar"), PathBuf::from("foo.bar")]
         },
-        Opt::try_parse_from(&["test", "ghi"]).unwrap()
+        Opt::try_parse_from(&["test", "ghi", "--arg2", "baz.bar", "--arg2", "foo.bar"]).unwrap()
     );
 
     let help = utils::get_long_help::<Opt>();
